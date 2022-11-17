@@ -5,28 +5,28 @@ import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
-import { resolve } from 'node:path/win32';
 
 // interface Timer {
-//   hour?: number | null;
-//   minute?: number | null;
-//   second?: number | null;
+//   hour?: number | string | null;
+//   minute?: number | string | null;
+//   second?: number | string | null;
 //   isStart: boolean;
-//   value?: number | null;
+//   value?: number | string | null;
 //   name: string;
-//   hourInput: { value?: string | null };
-//   minuteInput: { value?: string | null };
-//   secondInput: { value?: string | null };
+//   hourInput: { value?: string | number | null };
+//   minuteInput: { value?: string | number | null };
+//   secondInput: { value?: string | number | null };
 // }
 // if I use interface type, the side code would pops error : function App(): Timer {
 const App: React.FunctionComponent = () => {
-  const [hour, setHour] = useState<number | string | null | undefined>();
-  const [minute, setMinute] = useState<number | string | null | undefined>();
+  let [hour, setHour] = useState<number | string | null | undefined>();
+  let [minute, setMinute] = useState<number | string | null | undefined>();
   let [second, setSecond] = useState<number | string | null | undefined>();
-  const [isStart, setIsStart] = useState<boolean>(false);
+  let [isStart, setIsStart] = useState<boolean>(false);
+  let [statu, setStatu] = useState<"toStarted" | "started" | "stoped" | "timeOut">("toStarted");
   // Timer controllers
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const target = e.target as typeof e.target & {
+    let target = e.target as typeof e.target & {
       value?: number | string | null,
       name: string,
     }
@@ -38,7 +38,8 @@ const App: React.FunctionComponent = () => {
   }
   const handleSubmit = (e: React.FormEvent<HTMLInputElement>): void => {
     e.preventDefault();
-    const form = e.target as typeof e.target & {
+    setStatu("started");
+    let form = e.target as typeof e.target & {
       hourInput: {
         value?: number | string | null
       };
@@ -62,7 +63,7 @@ const App: React.FunctionComponent = () => {
       let countsNum = Number(counts);
       let countPromise = new Promise(
         (resolve) => {
-          let counting =
+          var counting =
             setInterval(() => {
               (countsNum-- && countsNum > 0) || clearInterval(counting);
               switch (unit) {
@@ -71,8 +72,9 @@ const App: React.FunctionComponent = () => {
                 case 1002: setHour(countsNum); break;
               }
               console.log("in setInterval: ", countsNum)
-              if (countsNum === 0)
+              if (countsNum === 0) {
                 resolve(true);
+              }
             }, unit);
         }
       )
@@ -80,30 +82,46 @@ const App: React.FunctionComponent = () => {
       return result;
     }
     console.log("counting down seconds");
-    countDown(1000, second).then(
-      () => {
-        console.log("counting down minutes");
-        countDown(1001, minute).then(
-          () => {
-            console.log("counting down hours");
-            countDown(1002, hour)
-          }
-        );
-      }
-    )
+    countDown(1000, second)
+      .then(
+        () => {
+          console.log("counting down minutes");
+          countDown(1001, minute)
+            .then(
+              () => {
+                console.log("counting down hours");
+                countDown(1002, hour).then(
+                  () => {
+                    setStatu("timeOut");
+                  }
+                )
+              }
+            );
+        }
+      )
   }
-  const handleClear = (e: React.MouseEvent<HTMLElement>): void => {
-    if (!isStart)
+  const handleClear = () => {
+    if (!isStart) {
       setHour(null);
-    setMinute(null);
-    setSecond(null);
+      setMinute(null);
+      setSecond(null);
+    };
   }
-  const handleCancel = (e: React.MouseEvent<HTMLElement>): void => {
-    if (isStart)
+  const handleStop = () => {
+    if (isStart) setStatu("stoped");
+  }
+  const handleCancel = () => {
+    if (isStart) {
+      setStatu("toStarted");
       setIsStart(false);
-    setHour(null);
-    setMinute(null);
-    setSecond(null);
+      setHour(null);
+      setMinute(null);
+      setSecond(null);
+    }
+  }
+  const handleRestart = () => {
+    setStatu("toStarted");
+    setIsStart(false);
   }
   return (
     <Container maxWidth="md">
@@ -114,7 +132,14 @@ const App: React.FunctionComponent = () => {
         {/* description */}
         <Stack textAlign='center'>
           <Typography variant='h6'>This is a timer based on MUI and React.JS techniques</Typography>
-          <Typography variant='h1'>Timer</Typography>
+          {statu === "toStarted"
+            ? <Typography variant='h1'>Timer</Typography>
+            : statu === "started"
+              ? <Typography variant='h1'>Counting Down</Typography>
+              : statu === "stoped"
+                ? <Typography variant='h1'>Stop for a while</Typography>
+                : <Typography variant='h1'>Time Out</Typography>
+          }
           <Typography variant='h6' >Please input hours, mimutes, seconds, and then click "Start"</Typography>
         </Stack>
         {/* input area */}
@@ -139,18 +164,23 @@ const App: React.FunctionComponent = () => {
               inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }} />
           </Stack>}
         {/* control buttons */}
-        {/* {isStart */}
-        {/* ? */}
-        <Stack direction="row" display="flex" justifyContent="space-between">
-          <Button onClick={handleCancel}>Cancel</Button>
-          <Button>Stop</Button>
-        </Stack>
-        {/* : */}
-        <Stack direction="row" display="flex" justifyContent="space-between">
-          <Button onClick={handleClear}>Clear</Button>
-          <Button type='submit'>Start</Button>
-        </Stack>
-        {/* } */}
+        {isStart
+          ?
+          (statu === "timeOut") ?
+            <Stack>
+              <Button onClick={handleRestart}>Restart</Button>
+            </Stack>
+            :
+            <Stack direction="row" display="flex" justifyContent="space-between">
+              <Button onClick={handleCancel}>Cancel</Button>
+              <Button onClick={handleStop}>Stop</Button>
+            </Stack>
+          :
+          <Stack direction="row" display="flex" justifyContent="space-between">
+            <Button onClick={handleClear}>Clear</Button>
+            <Button type='submit'>Start</Button>
+          </Stack>
+        }
       </Box>
     </Container>
   );
