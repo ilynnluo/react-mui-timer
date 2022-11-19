@@ -5,6 +5,7 @@ import '@fontsource/roboto/300.css';
 import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
+import { resolve } from 'node:path/win32';
 
 // interface Timer {
 //   hour?: number | string | null;
@@ -59,46 +60,117 @@ const App: React.FunctionComponent = () => {
     if (!minute) setMinute(0);
     if (!hour) setHour(0);
     // count down
-    async function countDown(unit: number, counts?: number | string | null) {
+
+    async function countDown(counts?: number | string | null) {
+      if (!counts) {
+        counts = 0;
+        return "counted";
+      }
       let countsNum = Number(counts);
       let countPromise = new Promise(
         (resolve) => {
           var counting =
             setInterval(() => {
-              (countsNum-- && countsNum > 0) || clearInterval(counting);
-              switch (unit) {
-                case 1000: setSecond(countsNum); break;
-                case 1001: setMinute(countsNum); break;
-                case 1002: setHour(countsNum); break;
-              }
-              console.log("in setInterval: ", countsNum)
+              (countsNum > 0 && countsNum--) || clearInterval(counting);
+              console.log("second count down: ", countsNum);
+              setSecond(countsNum);
               if (countsNum === 0) {
-                resolve(true);
+                console.log("counted")
+                resolve("counted");
               }
-            }, unit);
+            }, 1000);
         }
       )
-      let result = await countPromise;
-      return result;
+      return await countPromise;
     }
-    console.log("counting down seconds");
-    countDown(1000, second)
-      .then(
+
+    function Counting(S?: number | string | null, M?: number | string | null, H?: number | string | null) {
+      countDown(S).then(
         () => {
-          console.log("counting down minutes");
-          countDown(1001, minute)
-            .then(
-              () => {
-                console.log("counting down hours");
-                countDown(1002, hour).then(
-                  () => {
-                    setStatu("timeOut");
-                  }
-                )
-              }
-            );
+          let secondNum, minuteNum, hourNum;
+          M ? minuteNum = Number(M) : minuteNum = 0 ;
+          H ? hourNum = Number(H) : hourNum = 0 ;
+          (minuteNum ===0 && hourNum === 0) ? secondNum = 0 : secondNum = 9;
+          if (minuteNum > 0) {
+            minuteNum--;
+            // secondNum = 9;
+            setMinute(minuteNum);
+            console.log("1st Counting");
+            Counting(secondNum, minuteNum, hourNum);
+          };
+          if (minuteNum === 0) {
+            if (hourNum > 0) {
+              hourNum--;
+              minuteNum = 9;
+              // let secondNum = 9;
+              setMinute(minuteNum);
+              setHour(hourNum);
+              console.log("2nd Counting");
+              Counting(secondNum, minuteNum, hourNum);
+            }
+            // if (hourNum === 0) {
+            //   console.log("Timeout !!!");
+            //   setStatu("timeOut");
+            //   return true;
+            // }
+          }
+          console.log("secondNum: ", secondNum, "minuteNum: ", minuteNum, "hourNum: ", hourNum)
+          if (secondNum === 0 && minuteNum === 0 && hourNum === 0) {
+            setStatu("timeOut");
+            return true;
+          }
         }
       )
+
+    }
+
+    Counting(second, minute, hour);
+
+
+    // backup for the count down code
+    //  async function countDown(unit: number, counts?: number | string | null) {
+    //   if (!counts) {
+    //     counts = 0;
+    //     return true;
+    //   }
+    //   let countsNum = Number(counts);
+    //   let countPromise = new Promise(
+    //     (resolve) => {
+    //       var counting =
+    //         setInterval(() => {
+    //           (statu === "stoped" && countsNum > 0 && countsNum--) || clearInterval(counting);
+    //           console.log("in setInterval: ", countsNum, " unit: ", unit);
+    //           switch (unit) {
+    //             case 1000: setSecond(countsNum); break;
+    //             case 1001: setMinute(countsNum); break;
+    //             case 1002: setHour(countsNum); break;
+    //           }
+    //           if (countsNum === 0) {
+    //             resolve(true);
+    //           }
+    //         }, unit);
+    //     }
+    //   )
+    //   return await countPromise;
+    // }
+    // console.log("counting down seconds");
+    // countDown(1000, second)
+    //   .then(
+    //     () => {
+    //       console.log("counting down minutes");
+    //       countDown(1001, minute)
+    //         .then(
+    //           () => {
+    //             console.log("counting down hours");
+    //             countDown(1002, hour).then(
+    //               () => {
+    //                 setStatu("timeOut");
+    //               }
+    //             )
+    //           }
+    //         );
+    //     }
+    //   )
   }
   const handleClear = () => {
     if (!isStart) {
@@ -107,9 +179,9 @@ const App: React.FunctionComponent = () => {
       setSecond(null);
     };
   }
-  const handleStop = () => {
-    if (isStart) setStatu("stoped");
-  }
+  // const handleStop = () => {
+  //   if (isStart) setStatu("stoped");
+  //}
   const handleCancel = () => {
     if (isStart) {
       setStatu("toStarted");
@@ -173,7 +245,12 @@ const App: React.FunctionComponent = () => {
             :
             <Stack direction="row" display="flex" justifyContent="space-between">
               <Button onClick={handleCancel}>Cancel</Button>
-              <Button onClick={handleStop}>Stop</Button>
+              <Button>Stop</Button>
+              {/* {
+                (statu === "stoped")
+                ? <Button type='submit'>Continue</Button>
+                : <Button onClick={handleStop}>Stop</Button>
+              } */}
             </Stack>
           :
           <Stack direction="row" display="flex" justifyContent="space-between">
