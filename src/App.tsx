@@ -64,18 +64,20 @@ const App: React.FunctionComponent = () => {
     async function countDown(counts?: number | string | null) {
       if (!counts) {
         counts = 0;
+        console.log("NaN counted")
         return "counted";
       }
       let countsNum = Number(counts);
       let countPromise = new Promise(
         (resolve) => {
+          console.log("original second count: ", countsNum);
           var counting =
             setInterval(() => {
               (countsNum > 0 && countsNum--) || clearInterval(counting);
               console.log("second count down: ", countsNum);
               setSecond(countsNum);
               if (countsNum === 0) {
-                console.log("counted")
+                console.log("Number counted")
                 resolve("counted");
               }
             }, 1000);
@@ -90,12 +92,12 @@ const App: React.FunctionComponent = () => {
           let secondNum, minuteNum, hourNum;
           M ? minuteNum = Number(M) : minuteNum = 0 ;
           H ? hourNum = Number(H) : hourNum = 0 ;
-          (minuteNum ===0 && hourNum === 0) ? secondNum = 0 : secondNum = 9;
+          (minuteNum === 0 && hourNum === 0) ? secondNum = 0 : secondNum = 10;
           if (minuteNum > 0) {
             minuteNum--;
             // secondNum = 9;
             setMinute(minuteNum);
-            console.log("1st Counting");
+            console.log("1st Counting：", secondNum);
             Counting(secondNum, minuteNum, hourNum);
           };
           if (minuteNum === 0) {
