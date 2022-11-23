@@ -198,7 +198,7 @@ const App: React.FunctionComponent = () => {
               </Stack>
               :
               <Stack direction="row" display="flex" justifyContent="space-between" spacing={2} pt={4}>
-                <Button onClick={handleCancel} sx={{ width: '50%'}} variant='outlined'>Cancel</Button>
+                <Button onClick={handleCancel} sx={{ width: '50%'}} variant='outlined' disabled>Cancel</Button>
                 <Button onClick={handleStop} sx={{ width: '50%'}} variant='outlined' disabled>Stop</Button>
                 {/* { (statu === "stoped")
                   ? <Button type='submit'>Continue</Button>
