@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Container, Box, Typography, TextField, Button } from "@mui/material";
 import { Stack } from '@mui/system';
-import { styled } from "@mui/material/styles"
+import { styled } from "@mui/material/styles";
 
 // interface Timer {
 //   hour?: number | string | null;
@@ -23,13 +23,15 @@ const App: React.FunctionComponent = () => {
   const TimerHeader = styled(Typography)({
     fontWeight: 700,
     letterSpacing: 6,
-    py: 6, // py does nnt work, why?
+    // py does not work, why?
+    py: 6
   })
   const [hour, setHour] = useState<number | string | null | undefined>();
   const [minute, setMinute] = useState<number | string | null | undefined>();
   const [second, setSecond] = useState<number | string | null | undefined>();
   const [isStart, setIsStart] = useState<boolean>(false);
   const [statu, setStatu] = useState<"toStarted" | "started" | "stoped" | "timeOut">("toStarted");
+  
   // Timer controllers
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let target = e.target as typeof e.target & {
@@ -74,8 +76,8 @@ const App: React.FunctionComponent = () => {
       let countPromise = new Promise(
         (resolve) => {
           let counting = setInterval(() => {
-            (countsNum > 0 && countsNum--) || clearInterval(counting);
-            console.log("second count down inside interval: ", countsNum, "statu: ", statu);
+            (countsNum > 0 && countsNum-- ) || clearInterval(counting);
+            console.log("countPromise, the counting down second is: ", countsNum);
             setSecond(countsNum);
             if (countsNum === 0) resolve("counted");
           }, 1000);
@@ -83,7 +85,6 @@ const App: React.FunctionComponent = () => {
       )
       return await countPromise;
     }
-
     function Counting(S?: number | string | null, M?: number | string | null, H?: number | string | null) {
       countDown(S).then(
         () => {
@@ -94,7 +95,6 @@ const App: React.FunctionComponent = () => {
           if (minuteNum > 0) {
             minuteNum--;
             setMinute(minuteNum);
-            console.log("1st Counting：", secondNum);
             Counting(secondNum, minuteNum, hourNum);
           };
           if (minuteNum === 0) {
@@ -103,21 +103,20 @@ const App: React.FunctionComponent = () => {
               minuteNum = 9;
               setMinute(minuteNum);
               setHour(hourNum);
-              console.log("2nd Counting");
               Counting(secondNum, minuteNum, hourNum);
             }
           }
           console.log("secondNum: ", secondNum, "minuteNum: ", minuteNum, "hourNum: ", hourNum)
           if (secondNum === 0 && minuteNum === 0 && hourNum === 0) {
             setStatu("timeOut");
+            // error if change DOM 
+            // () => { document.getElementById('alert').style.color = 'red'; };
             return true;
           }
         }
       )
     }
-
     Counting(second, minute, hour);
-
   }
   const handleClear = () => {
     if (!isStart) {
@@ -159,10 +158,10 @@ const App: React.FunctionComponent = () => {
             {statu === "toStarted"
               ? <TimerHeader variant='h1' py={6}>Timer</TimerHeader>
               : statu === "started"
-                ? <TimerHeader variant='h1'py={6}>Counting Down</TimerHeader>
+                ? <TimerHeader variant='h1' py={6}>Counting Down</TimerHeader>
                 // : statu === "stoped"
                 //   ? <Typography variant='h1'>Stop for a while</Typography>
-                : <TimerHeader variant='h1'py={6}>Time Out</TimerHeader>
+                : <TimerHeader id='alert' variant='h1' py={6}>Time Out</TimerHeader>
             }
             <Typography variant='h6' fontSize='1rem' fontWeight='500' color='text.secondary'>
               Please input hours, mimutes, seconds, and then click "Start"</Typography>
