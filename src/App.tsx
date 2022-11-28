@@ -3,39 +3,30 @@ import { Container, Box, Typography, TextField, Button } from "@mui/material";
 import { Stack } from '@mui/system';
 import { styled } from "@mui/material/styles";
 
-// interface Timer {
-//   hour?: number | string | null;
-//   minute?: number | string | null;
-//   second?: number | string | null;
-//   isStart: boolean;
-//   value?: number | string | null;
-//   name: string;
-//   hourInput: { value?: string | number | null };
-//   minuteInput: { value?: string | number | null };
-//   secondInput: { value?: string | number | null };
-// }
+const TimerInput = styled(TextField)({
+  width: '8rem',
+  size: 'medium',
+});
+const TimerHeader = styled(Typography)({
+  fontWeight: 700,
+  letterSpacing: 6,
+  py: 6
+})
 
 const App: React.FunctionComponent = () => {
-  const TimerInput = styled(TextField)({
-    width: '8rem',
-    size: 'medium',
-  });
-  const TimerHeader = styled(Typography)({
-    fontWeight: 700,
-    letterSpacing: 6,
-    // py does not work, why?
-    py: 6
-  })
-  const [hour, setHour] = useState<number | string | null | undefined>();
-  const [minute, setMinute] = useState<number | string | null | undefined>();
-  const [second, setSecond] = useState<number | string | null | undefined>();
-  const [isStart, setIsStart] = useState<boolean>(false);
-  const [statu, setStatu] = useState<"toStarted" | "started" | "stoped" | "timeOut">("toStarted");
   
+  // dont use mutiple types
+  const [hour, setHour] = useState<number | null | undefined>();
+  const [minute, setMinute] = useState<number | null | undefined>();
+  const [second, setSecond] = useState<number | null | undefined>();
+  const [isStart, setIsStart] = useState<boolean>(false);
+  //enum
+  const [statu, setStatu] = useState<"toStarted" | "started" | "stoped" | "timeOut">("toStarted");
+
   // Timer controllers
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let target = e.target as typeof e.target & {
-      value?: number | string | null,
+      value?: number | null,
       name: string,
     }
     switch (target.name) {
@@ -44,18 +35,19 @@ const App: React.FunctionComponent = () => {
       case "secondInput": { setSecond(target.value); break; }
     }
   }
+  // try to install eslint
   const handleSubmit = (e: React.FormEvent<HTMLInputElement>): void => {
     e.preventDefault();
     setStatu("started");
     let form = e.target as typeof e.target & {
       hourInput: {
-        value?: number | string | null
+        value?: number | null
       };
       minuteInput: {
-        value?: number | string | null
+        value?: number | null
       };
       secondInput: {
-        value?: number | string | null
+        value?: number | null
       };
     };
     setHour(Number(form.hourInput.value));
@@ -67,7 +59,7 @@ const App: React.FunctionComponent = () => {
     if (!minute) setMinute(0);
     if (!hour) setHour(0);
     // count down
-    async function countDown(counts?: number | string | null) {
+    async function countDown(counts?: number | null) {
       if (!counts) {
         counts = 0;
         return "counted";
@@ -76,7 +68,7 @@ const App: React.FunctionComponent = () => {
       let countPromise = new Promise(
         (resolve) => {
           let counting = setInterval(() => {
-            (countsNum > 0 && countsNum-- ) || clearInterval(counting);
+            (countsNum > 0 && countsNum--) || clearInterval(counting);
             console.log("countPromise, the counting down second is: ", countsNum);
             setSecond(countsNum);
             if (countsNum === 0) resolve("counted");
@@ -85,7 +77,7 @@ const App: React.FunctionComponent = () => {
       )
       return await countPromise;
     }
-    function Counting(S?: number | string | null, M?: number | string | null, H?: number | string | null) {
+    function Counting(S?: number | null, M?: number | string | null, H?: number | null) {
       countDown(S).then(
         () => {
           let secondNum, minuteNum, hourNum;
@@ -145,74 +137,77 @@ const App: React.FunctionComponent = () => {
     setIsStart(false);
   }
   return (
-    <Container maxWidth="md" >
-      <Box sx={{ display: 'flex',justifyContent: 'center', height: '100vh' }}
-        component="form"
-        onSubmit={handleSubmit}
-      >
+
+    <Box sx={{ display: 'flex', justifyContent: 'center', height: '100vh' }}
+      component="form"
+      onSubmit={handleSubmit}
+    >
+      <Container sx={{width: "480px"}} >
         {/* description */}
-        <div style={{width: '440px'}}>
-          <Stack textAlign='center'>
-            <Typography variant='h6' mt={2} fontWeight='600' color='text.secondary'>
-              The Timer is based on MUI and React.JS</Typography>
-            {statu === "toStarted"
-              ? <TimerHeader variant='h1' py={6}>Timer</TimerHeader>
-              : statu === "started"
-                ? <TimerHeader variant='h1' py={6}>Counting Down</TimerHeader>
-                // : statu === "stoped"
-                //   ? <Typography variant='h1'>Stop for a while</Typography>
-                : <TimerHeader id='alert' variant='h1' py={6}>Time Out</TimerHeader>
-            }
-            <Typography variant='h6' fontSize='1rem' fontWeight='500' color='text.secondary'>
-              Please input hours, mimutes, seconds, and then click "Start"</Typography>
+
+        <Stack textAlign='center'>
+          <Typography variant='h6' mt={2} fontWeight='600' color='text.secondary'>
+            The Timer is based on MUI and React.JS</Typography>
+          {statu === "toStarted"
+            ? <TimerHeader variant='h1' py={6}>Timer</TimerHeader>
+            : statu === "started"
+              ? <TimerHeader variant='h1' py={6}>Counting Down</TimerHeader>
+              // : statu === "stoped"
+              //   ? <Typography variant='h1'>Stop for a while</Typography>
+              : <TimerHeader id='alert' variant='h1' py={6}
+                sx={{ color: (theme) => setInterval(theme.palette.info.main ? theme.palette.info.main : theme.palette.info.main, 1000) }}
+              >Time Out</TimerHeader>
+          }
+          <Typography variant='h6' fontSize='1rem' fontWeight='500' color='text.secondary'>
+            Please input hours, mimutes, seconds, and then click "Start"</Typography>
+        </Stack>
+        {/* input area */}
+        {isStart
+          ?
+          <Stack direction="row" display="flex" justifyContent="space-between" py={3}>
+            <TimerInput disabled name='hourInput' value={hour} label="hour" type="number" />
+            <Typography variant='h3'>:</Typography>
+            <TimerInput disabled name='minuteInput' value={minute} label="minute" type="number" />
+            <Typography variant='h3'>:</Typography>
+            <TimerInput disabled name='secondInput' value={second} label="second" type="number" />
           </Stack>
-          {/* input area */}
-          {isStart
+          :
+          <Stack direction="row" display="flex" justifyContent="space-between" py={3}>
+            <TimerInput name='hourInput' value={hour || ''} onChange={handleChange} label="hour" type="number"
+              inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }} />
+            <Typography variant='h3'>:</Typography>
+            <TimerInput name='minuteInput' value={minute || ''} onChange={handleChange} label="minute" type="number"
+              inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }} />
+            <Typography variant='h3'>:</Typography>
+            <TimerInput name='secondInput' value={second || ''} onChange={handleChange} label="second" type="number"
+              inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }} />
+          </Stack>}
+        {/* control buttons */}
+        {isStart
+          ?
+          (statu === "timeOut")
             ?
-            <Stack direction="row" display="flex" justifyContent="space-between" py={3}>
-              <TimerInput disabled name='hourInput' value={hour}  label="hour" />
-              <Typography variant='h3'>:</Typography>
-              <TimerInput disabled name='minuteInput' value={minute} label="minute" />
-              <Typography variant='h3'>:</Typography>
-              <TimerInput disabled name='secondInput' value={second} label="second" />
+            <Stack pt={4}>
+              <Button onClick={handleRestart} variant='contained' >Restart</Button>
             </Stack>
             :
-            <Stack direction="row" display="flex" justifyContent="space-between" py={3}>
-              <TimerInput name='hourInput' value={hour || ''} onChange={handleChange} label="hour"
-                inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }} />
-              <Typography variant='h3'>:</Typography>
-              <TimerInput name='minuteInput' value={minute || ''} onChange={handleChange} label="minute"
-                inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }} />
-              <Typography variant='h3'>:</Typography>
-              <TimerInput name='secondInput' value={second || ''} onChange={handleChange} label="second"
-                inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }} />
-            </Stack>}
-          {/* control buttons */}
-          {isStart
-            ?
-            (statu === "timeOut")
-              ?
-              <Stack pt={4}>
-                <Button onClick={handleRestart} variant='contained' >Restart</Button>
-              </Stack>
-              :
-              <Stack direction="row" display="flex" justifyContent="space-between" spacing={2} pt={4}>
-                <Button onClick={handleCancel} sx={{ width: '50%'}} variant='outlined' disabled>Cancel</Button>
-                <Button onClick={handleStop} sx={{ width: '50%'}} variant='outlined' disabled>Stop</Button>
-                {/* { (statu === "stoped")
+            <Stack direction="row" display="flex" justifyContent="space-between" spacing={2} pt={4}>
+              <Button onClick={handleCancel} sx={{ width: '50%' }} variant='outlined' disabled>Cancel</Button>
+              <Button onClick={handleStop} sx={{ width: '50%' }} variant='outlined' disabled>Stop</Button>
+              {/* { (statu === "stoped")
                   ? <Button type='submit'>Continue</Button>
                   : <Button onClick={handleStop}>Stop</Button>
               } */}
-              </Stack>
-            :
-            <Stack direction="row" display="flex" justifyContent="space-between" spacing={2} pt={4}>
-              <Button onClick={handleClear} sx={{ width: '50%'}} variant='outlined'>Clear</Button>
-              <Button type='submit' sx={{ width: '50%'}} variant='contained'>Start</Button>
             </Stack>
-          }
-        </div>
-      </Box>
-    </Container>
+          :
+          <Stack direction="row" display="flex" justifyContent="space-between" spacing={2} pt={4}>
+            <Button onClick={handleClear} sx={{ width: '50%' }} variant='outlined'>Clear</Button>
+            <Button type='submit' sx={{ width: '50%' }} variant='contained'>Start</Button>
+          </Stack>
+        }
+      </Container>
+    </Box>
+
   );
 }
 
