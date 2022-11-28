@@ -3,6 +3,13 @@ import { Container, Box, Typography, TextField, Button } from '@mui/material'
 import { Stack } from '@mui/system'
 import { styled } from '@mui/material/styles'
 
+enum StateDef {
+  ToStarted = 'TOSTARTED',
+  Started = 'STARTED',
+  Stoped = 'STOPED',
+  Timeout = 'TIMEOUT',
+}
+
 const TimerInput = styled(TextField)({
   width: '8rem',
   size: 'medium'
@@ -18,13 +25,6 @@ const App: React.FunctionComponent = () => {
   const [minute, setMinute] = useState<number | null | undefined>()
   const [second, setSecond] = useState<number | null | undefined>()
   const [isStart, setIsStart] = useState<boolean>(false)
-  // enum
-  enum StateDef {
-    ToStarted = 'TOSTARTED',
-    Started = 'STARTED',
-    Stoped = 'STOPED',
-    Timeout = 'TIMEOUT',
-  }
   const [statu, setStatu] = useState<StateDef>(StateDef.ToStarted)
   // Timer controllers
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -57,58 +57,56 @@ const App: React.FunctionComponent = () => {
     setSecond(Number(form.secondInput.value))
     setIsStart(true)
     // set default timer
-    if (!second) setSecond(0)
-    if (!minute) setMinute(0)
-    if (!hour) setHour(0)
+    second ?? setSecond(0)
+    minute ?? setMinute(0)
+    hour ?? setHour(0)
     // count down
-    async function countDown (counts?: number | null) {
-      if (!counts) {
-        counts = 0
-        return 'counted'
-      }
-      let countsNum = Number(counts)
-      const countPromise = new Promise(
+    async function countDown (counts?: number | null): Promise<unknown> {
+      let countsNum = counts ?? 0
+      const countPromise = await new Promise(
         (resolve) => {
           const counting = setInterval(() => {
-            (countsNum > 0 && countsNum--) || clearInterval(counting)
+            (countsNum > 0 ?? countsNum--) || clearInterval(counting)
             console.log('countPromise, the counting down second is: ', countsNum)
             setSecond(countsNum)
             if (countsNum === 0) resolve('counted')
           }, 1000)
         }
       )
-      return await countPromise
+      return countPromise
     }
-    function Counting (S?: number | null, M?: number | string | null, H?: number | null) {
-      countDown(S).then(
-        () => {
-          let secondNum, minuteNum, hourNum
-          M ? minuteNum = Number(M) : minuteNum = 0
-          H ? hourNum = Number(H) : hourNum = 0;
-          (minuteNum === 0 && hourNum === 0) ? secondNum = 0 : secondNum = 10
-          if (minuteNum > 0) {
-            minuteNum--
-            setMinute(minuteNum)
-            Counting(secondNum, minuteNum, hourNum)
-          };
-          if (minuteNum === 0) {
-            if (hourNum > 0) {
-              hourNum--
-              minuteNum = 9
+    function Counting (S?: number | null, M?: number | null, H?: number | null): void {
+      countDown(S)
+        .then(
+          () => {
+            let secondNum, minuteNum, hourNum
+            minuteNum = M ?? 0
+            hourNum = H ?? 0;
+            (minuteNum === 0 && hourNum === 0) ? secondNum = 0 : secondNum = 10
+            if (minuteNum > 0) {
+              minuteNum--
               setMinute(minuteNum)
-              setHour(hourNum)
               Counting(secondNum, minuteNum, hourNum)
+            };
+            if (minuteNum === 0) {
+              if (hourNum > 0) {
+                hourNum--
+                minuteNum = 9
+                setMinute(minuteNum)
+                setHour(hourNum)
+                Counting(secondNum, minuteNum, hourNum)
+              }
+            }
+            console.log('secondNum: ', secondNum, 'minuteNum: ', minuteNum, 'hourNum: ', hourNum)
+            if (secondNum === 0 && minuteNum === 0 && hourNum === 0) {
+              setStatu(StateDef.Timeout)
+              // error if change DOM
+              // () => { document.getElementById('alert').style.color = 'red'; };
+              return true
             }
           }
-          console.log('secondNum: ', secondNum, 'minuteNum: ', minuteNum, 'hourNum: ', hourNum)
-          if (secondNum === 0 && minuteNum === 0 && hourNum === 0) {
-            setStatu(StateDef.Timeout)
-            // error if change DOM
-            // () => { document.getElementById('alert').style.color = 'red'; };
-            return true
-          }
-        }
-      )
+        )
+        .catch(e => console.log(e))
     }
     Counting(second, minute, hour)
   }
@@ -156,11 +154,11 @@ const App: React.FunctionComponent = () => {
               // : statu === "stoped"
               //   ? <Typography variant='h1'>Stop for a while</Typography>
               : <TimerHeader id='alert' variant='h1' py={6}
-                sx={{ color: (theme) => setInterval(theme.palette.info.main ? theme.palette.info.main : theme.palette.info.main, 1000) }}
+                // sx={{ color: (theme) => setInterval(theme.palette.info.main ? theme.palette.info.main : theme.palette.info.main, 1000) }}
               >Time Out</TimerHeader>
           }
           <Typography variant='h6' fontSize='1rem' fontWeight='500' color='text.secondary'>
-            Please input hours, mimutes, seconds, and then click `&quot;`Start`&quot;`</Typography>
+            Please input hours, mimutes, seconds, and then click &quot;Start&quot;</Typography>
         </Stack>
         {/* input area */}
         {isStart
@@ -172,13 +170,13 @@ const App: React.FunctionComponent = () => {
             <TimerInput disabled name='secondInput' value={second} label="second" type="number" />
           </Stack>
           : <Stack direction="row" display="flex" justifyContent="space-between" py={3}>
-            <TimerInput name='hourInput' value={hour || ''} onChange={handleChange} label="hour" type="number"
+            <TimerInput name='hourInput' value={hour ?? ''} onChange={handleChange} label="hour" type="number"
               inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }} />
             <Typography variant='h3'>:</Typography>
-            <TimerInput name='minuteInput' value={minute || ''} onChange={handleChange} label="minute" type="number"
+            <TimerInput name='minuteInput' value={minute ?? ''} onChange={handleChange} label="minute" type="number"
               inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }} />
             <Typography variant='h3'>:</Typography>
-            <TimerInput name='secondInput' value={second || ''} onChange={handleChange} label="second" type="number"
+            <TimerInput name='secondInput' value={second ?? ''} onChange={handleChange} label="second" type="number"
               inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }} />
           </Stack>}
         {/* control buttons */}
