@@ -66,7 +66,7 @@ const App: React.FunctionComponent = () => {
       const countPromise = await new Promise(
         (resolve) => {
           const counting = setInterval(() => {
-            (countsNum > 0 ?? countsNum--) || clearInterval(counting)
+            (countsNum && countsNum--) || clearInterval(counting)
             console.log('countPromise, the counting down second is: ', countsNum)
             setSecond(countsNum)
             if (countsNum === 0) resolve('counted')
