@@ -9,7 +9,6 @@ enum StateDef {
   Stoped = 'STOPED',
   Timeout = 'TIMEOUT',
 }
-
 const TimerInput = styled(TextField)({
   width: '8rem',
   size: 'medium'
@@ -19,7 +18,18 @@ const TimerHeader = styled(Typography)({
   letterSpacing: 6,
   py: 6
 })
-
+const TimeoutHeader = styled(Typography)({
+  fontWeight: 700,
+  letterSpacing: 6,
+  py: 6,
+  animationName: 'FlashText',
+  animationDuration: '1s',
+  animationIterationCount: 'infinite',
+  '@Keyframes FlashText': {
+    from: { color: 'primary.light' },
+    to: { color: 'warning.main' }
+  }
+})
 const App: React.FunctionComponent = () => {
   const [hour, setHour] = useState<number | null | undefined>()
   const [minute, setMinute] = useState<number | null | undefined>()
@@ -52,9 +62,9 @@ const App: React.FunctionComponent = () => {
         value?: number | null
       }
     }
-    setHour(Number(form.hourInput.value))
-    setMinute(Number(form.minuteInput.value))
-    setSecond(Number(form.secondInput.value))
+    setHour(form.hourInput.value)
+    setMinute(form.minuteInput.value)
+    setSecond(form.secondInput.value)
     setIsStart(true)
     // set default timer
     second ?? setSecond(0)
@@ -133,11 +143,13 @@ const App: React.FunctionComponent = () => {
     }
   }
   const handleRestart = (): void => {
+    setSecond(null)
+    setMinute(null)
+    setHour(null)
     setStatu(StateDef.ToStarted)
     setIsStart(false)
   }
   return (
-
     <Box sx={{ display: 'flex', justifyContent: 'center', height: '100vh' }}
       component="form"
       onSubmit={handleSubmit}
@@ -153,9 +165,7 @@ const App: React.FunctionComponent = () => {
               ? <TimerHeader variant='h1' py={6}>Counting Down</TimerHeader>
               // : statu === "stoped"
               //   ? <Typography variant='h1'>Stop for a while</Typography>
-              : <TimerHeader id='alert' variant='h1' py={6}
-                // sx={{ color: (theme) => setInterval(theme.palette.info.main ? theme.palette.info.main : theme.palette.info.main, 1000) }}
-              >Time Out</TimerHeader>
+              : <TimeoutHeader id='alert' variant='h1' py={6}>Time Out</TimeoutHeader>
           }
           <Typography variant='h6' fontSize='1rem' fontWeight='500' color='text.secondary'>
             Please input hours, mimutes, seconds, and then click &quot;Start&quot;</Typography>
