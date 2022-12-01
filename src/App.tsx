@@ -2,7 +2,8 @@ import React, { useState } from 'react'
 import { Container, Box, Typography, TextField, Button } from '@mui/material'
 import { Stack } from '@mui/system'
 import { styled } from '@mui/material/styles'
-
+let timer: any
+let tick: number
 enum StateDef {
   ToStarted = 'TOSTARTED',
   Started = 'STARTED',
@@ -36,6 +37,8 @@ const App: React.FunctionComponent = () => {
   const [second, setSecond] = useState<number | null | undefined>()
   const [isStart, setIsStart] = useState<boolean>(false)
   const [statu, setStatu] = useState<StateDef>(StateDef.ToStarted)
+  const [showStop, setShowStop] = useState(true)
+  const [showContinue, setShowContinue] = useState(false)
   // Timer controllers
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const target = e.target as typeof e.target & {
@@ -48,78 +51,25 @@ const App: React.FunctionComponent = () => {
       case 'secondInput': { setSecond(target.value); break }
     }
   }
-  const handleSubmit = (e: React.FormEvent<HTMLInputElement>): void => {
-    e.preventDefault()
+  const handleSubmit = (): any => {
     setStatu(StateDef.Started)
-    const form = e.target as typeof e.target & {
-      hourInput: {
-        value?: number | null
-      }
-      minuteInput: {
-        value?: number | null
-      }
-      secondInput: {
-        value?: number | null
-      }
-    }
-    setHour(form.hourInput.value)
-    setMinute(form.minuteInput.value)
-    setSecond(form.secondInput.value)
     setIsStart(true)
-    // set default timer
-    second ?? setSecond(0)
-    minute ?? setMinute(0)
-    hour ?? setHour(0)
-    // count down
-    async function countDown (counts?: number | null): Promise<unknown> {
-      let countsNum = counts ?? 0
-      const countPromise = await new Promise(
-        (resolve) => {
-          const counting = setInterval(() => {
-            (countsNum && countsNum--) || clearInterval(counting)
-            console.log('countPromise, the counting down second is: ', countsNum)
-            setSecond(countsNum)
-            if (countsNum === 0) resolve('counted')
-          }, 1000)
-        }
-      )
-      return countPromise
-    }
-    function Counting (S?: number | null, M?: number | null, H?: number | null): void {
-      countDown(S)
-        .then(
-          () => {
-            let secondNum, minuteNum, hourNum
-            minuteNum = M ?? 0
-            hourNum = H ?? 0;
-            (minuteNum === 0 && hourNum === 0) ? secondNum = 0 : secondNum = 10
-            if (minuteNum > 0) {
-              minuteNum--
-              setMinute(minuteNum)
-              Counting(secondNum, minuteNum, hourNum)
-            };
-            if (minuteNum === 0) {
-              if (hourNum > 0) {
-                hourNum--
-                minuteNum = 9
-                setMinute(minuteNum)
-                setHour(hourNum)
-                Counting(secondNum, minuteNum, hourNum)
-              }
-            }
-            console.log('secondNum: ', secondNum, 'minuteNum: ', minuteNum, 'hourNum: ', hourNum)
-            if (secondNum === 0 && minuteNum === 0 && hourNum === 0) {
-              setStatu(StateDef.Timeout)
-              // error if change DOM
-              // () => { document.getElementById('alert').style.color = 'red'; };
-              return true
-            }
-          }
-        )
-        .catch(e => console.log(e))
-    }
-    Counting(second, minute, hour)
+    tick = Number(second ?? 0) + Number(minute ?? 0) * 60 + Number(hour ?? 0) * 3600
+
+    timer = setInterval((): void => {
+      tick = tick - 1
+      setHour(Math.floor(tick / 3600))
+      setMinute(Math.floor((tick % 3600) / 60))
+      setSecond((tick % 3600) % 60)
+      if (tick <= 0) {
+        setHour(0)
+        setMinute(0)
+        setSecond(0)
+        handleTimeout()
+      }
+    }, 1000)
   }
+
   const handleClear = (): void => {
     if (!isStart) {
       setHour(null)
@@ -127,20 +77,36 @@ const App: React.FunctionComponent = () => {
       setSecond(null)
     };
   }
-  const handleStop = (): void => {
-    if (isStart) {
-      setStatu(StateDef.Stoped)
-      console.log('handleStop statu: ', statu)
-    }
+  const handleTimeout = (): void => {
+    setStatu(StateDef.Timeout)
+    setIsStart(false)
+    setHour(null)
+    setMinute(null)
+    setSecond(null)
+    clearInterval(timer)
   }
   const handleCancel = (): void => {
-    if (isStart) {
-      setStatu(StateDef.ToStarted)
-      setIsStart(false)
-      setHour(null)
-      setMinute(null)
-      setSecond(null)
-    }
+    setStatu(StateDef.ToStarted)
+    setIsStart(false)
+    setHour(null)
+    setMinute(null)
+    setSecond(null)
+    clearInterval(timer)
+  }
+  const handleStop = (): void => {
+    setStatu(StateDef.Stoped)
+    clearInterval(timer)
+    setHour(Math.floor(tick / 3600))
+    setMinute(Math.floor((tick % 3600) / 60))
+    setSecond((tick % 3600) % 60)
+    setShowStop(false)
+    setShowContinue(true)
+  }
+  const handleContinue = (): void => {
+    setStatu(StateDef.Started)
+    setShowStop(true)
+    setShowContinue(false)
+    handleSubmit()
   }
   const handleRestart = (): void => {
     setSecond(null)
@@ -163,9 +129,9 @@ const App: React.FunctionComponent = () => {
             ? <TimerHeader variant='h1' py={6}>Timer</TimerHeader>
             : statu === StateDef.Started
               ? <TimerHeader variant='h1' py={6}>Counting Down</TimerHeader>
-              // : statu === "stoped"
-              //   ? <Typography variant='h1'>Stop for a while</Typography>
-              : <TimeoutHeader id='alert' variant='h1' py={6}>Time Out</TimeoutHeader>
+              : statu === StateDef.Stoped
+                ? <TimerHeader variant='h1'>Stop for a while</TimerHeader>
+                : <TimeoutHeader id='alert' variant='h1' py={6}>Time Out</TimeoutHeader>
           }
           <Typography variant='h6' fontSize='1rem' fontWeight='500' color='text.secondary'>
             Please input hours, mimutes, seconds, and then click &quot;Start&quot;</Typography>
@@ -191,26 +157,22 @@ const App: React.FunctionComponent = () => {
           </Stack>}
         {/* control buttons */}
         {isStart
-          ? (statu === StateDef.Timeout)
-              ? <Stack pt={4}>
-                <Button onClick={handleRestart} variant='contained' >Restart</Button>
-                </Stack>
-              : <Stack direction="row" display="flex" justifyContent="space-between" spacing={2} pt={4}>
-                <Button onClick={handleCancel} sx={{ width: '50%' }} variant='outlined' disabled>Cancel</Button>
-                <Button onClick={handleStop} sx={{ width: '50%' }} variant='outlined' disabled>Stop</Button>
-                {/* { (statu === "stoped")
-                    ? <Button type='submit'>Continue</Button>
-                    : <Button onClick={handleStop}>Stop</Button>
-                } */}
-              </Stack>
+          ? statu === StateDef.Timeout
+            ? <Stack pt={4}>
+              <Button onClick={handleRestart} variant='contained'>Restart</Button>
+            </Stack>
+            : <Stack direction="row" display="flex" justifyContent="space-between" spacing={2} pt={4}>
+              <Button onClick={handleCancel} sx={{ width: '50%' }} variant='outlined'>Cancel</Button>
+              { showStop && <Button onClick={ handleStop } sx={{ width: '50%' }} variant='outlined'>Stop</Button> }
+              { showContinue && <Button type='submit' onClick={ handleContinue } sx={{ width: '50%' }} variant='contained'>Continue</Button>}
+            </Stack>
           : <Stack direction="row" display="flex" justifyContent="space-between" spacing={2} pt={4}>
             <Button onClick={handleClear} sx={{ width: '50%' }} variant='outlined'>Clear</Button>
-            <Button type='submit' sx={{ width: '50%' }} variant='contained'>Start</Button>
+            <Button onClick={handleSubmit} sx={{ width: '50%' }} variant='contained'>Start</Button>
           </Stack>
         }
       </Container>
     </Box>
-
   )
 }
 
