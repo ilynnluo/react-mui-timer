@@ -54,6 +54,9 @@ const App: React.FunctionComponent = () => {
   const handleSubmit = (): any => {
     setStatu(StateDef.Started)
     setIsStart(true)
+    setSecond(second ?? 0)
+    setMinute(minute ?? 0)
+    setHour(hour ?? 0)
     tick = Number(second ?? 0) + Number(minute ?? 0) * 60 + Number(hour ?? 0) * 3600
 
     timer = setInterval((): void => {
@@ -131,7 +134,7 @@ const App: React.FunctionComponent = () => {
               ? <TimerHeader variant='h1' py={6}>Counting Down</TimerHeader>
               : statu === StateDef.Stoped
                 ? <TimerHeader variant='h1'>Stop for a while</TimerHeader>
-                : <TimeoutHeader id='alert' variant='h1' py={6}>Time Out</TimeoutHeader>
+                : <TimeoutHeader variant='h1' py={6}>Time Out</TimeoutHeader>
           }
           <Typography variant='h6' fontSize='1rem' fontWeight='500' color='text.secondary'>
             Please input hours, mimutes, seconds, and then click &quot;Start&quot;</Typography>
